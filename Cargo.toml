@@ -2,36 +2,87 @@
 name = "rmz"
 version = "0.1.0"
 edition = "2021"
-authors = ["rmz contributors"]
-description = "The next gen rm command"
-homepage = "https://github.com/daktu32/rmz"
-repository = "https://github.com/daktu32/rmz"
+authors = ["rmz Development Team"]
 license = "MIT OR Apache-2.0"
-keywords = ["cli", "command-line", "tool"]
-categories = ["command-line-utilities"]
+description = "Safe file deletion with recovery - A modern CLI tool built in Rust"
+homepage = "https://github.com/rmz-dev/rmz"
+repository = "https://github.com/rmz-dev/rmz"
+readme = "README.md"
+keywords = ["cli", "file", "delete", "trash", "recovery"]
+categories = ["command-line-utilities", "filesystem"]
 
 [dependencies]
-# CLI framework
-clap = { version = "4.0", features = ["derive", "cargo"] }
-# Terminal colors
-colored = "2.0"
-# Interactive CLI
-dialoguer = "0.11"
+# CLI Framework
+clap = { version = "4.4", features = ["derive", "cargo"] }
+clap_complete = "4.4"
+
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-# Date/time handling
+
+# Date/Time
 chrono = { version = "0.4", features = ["serde"] }
-# Error handling
+
+# UUID Generation
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# File Operations
+fs_extra = "1.3"
+
+# Path Operations
+path-absolutize = "3.1"
+
+# Directory Management (XDG)
+directories = "5.0"
+
+# Configuration Management
+confy = "0.5"
+toml = "0.8"
+
+# Terminal Colors
+colored = { version = "2.1", optional = true }
+
+# Interactive Prompts
+dialoguer = "0.11"
+
+# External Command Execution (for fzf)
+duct = { version = "0.13", optional = true }
+
+# Error Handling
 anyhow = "1.0"
 thiserror = "1.0"
 
+# Cryptography
+sha2 = "0.10"
+
 [dev-dependencies]
-# Testing utilities
-tempfile = "3.0"
+# Testing Framework
+tempfile = "3.8"
 assert_cmd = "2.0"
 predicates = "3.0"
+insta = "1.34"
+
+# Mocking
+mockall = "0.12"
 
 [[bin]]
 name = "rmz"
 path = "src/main.rs"
+
+[features]
+default = ["colors"]
+colors = ["colored"]
+fzf = ["duct"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

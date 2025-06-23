@@ -157,11 +157,11 @@ graph LR
 
 | Phase | Duration | Key Deliverables |
 |-------|----------|-----------------|
-| Research & Design |  |  |
-| MVP Development |  |  |
-| Beta Testing |  |  |
-| Launch Preparation |  |  |
-| Post-Launch | Ongoing |  |
+| Research & Design | 2週間 | アーキテクチャ設計、UI/UXモックアップ |
+| MVP Development | 6週間 | 基本機能（delete, restore, list）実装 |
+| Beta Testing | 4週間 | フィードバック収集、バグ修正 |
+| Launch Preparation | 2週間 | ドキュメント整備、パッケージング |
+| Post-Launch | Ongoing | 機能拡張、コミュニティサポート |
 
 ### Major Milestones
 - ****: 

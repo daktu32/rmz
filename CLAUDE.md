@@ -4,26 +4,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-wezterm-parallel - 
+rmz - 安全な削除を実現するモダンなCLIツール
 
 ## Technology Stack
 
-See (docs/tech-stack.md) for complete technology stack definitions and rationale.
+See [docs/tech-stack.md](docs/tech-stack.md) for complete technology stack definitions and rationale.
+
+### Key Technologies
+- **Language**: Rust
+- **CLI Framework**: clap v4
+- **Async Runtime**: tokio
+- **File Operations**: std::fs + trash-rs
+- **Configuration**: TOML (toml crate)
+- **Testing**: cargo test + mockall
 
 ## Architecture
 
 ### Overview
 ```
+rmz - Rust製の安全なファイル削除ツール
 
-Example:
- →  →  →  → 
+削除フロー:
+ユーザー → rmz delete → TrashZone → メタデータ記録 → 復元可能
+
+主要コンポーネント:
+- CLI層: コマンドパース、ユーザーインタラクション
+- ビジネス層: 削除・復元・履歴管理ロジック
+- データ層: TrashZone管理、メタデータ永続化
 ```
 
 ### Key Components
-- **Frontend**: 
-- **API Layer**: 
-- **Business Logic**: 
-- **Data Layer**: 
+- **CLI Interface**: clap によるコマンドパース、対話的UI
+- **Core Logic**: ファイル操作、メタデータ管理、履歴追跡
+- **Storage**: TrashZone (~/.rmz/trash/)、メタデータJSON
+- **Configuration**: ユーザー設定、保護リスト管理
 
 ## Development Philosophy
 
@@ -37,53 +51,53 @@ Example:
 ## Key Features
 
 ### MVP Features
-1. ****: 
-2. ****: 
-3. ****: 
-4. ****: 
-5. ****: 
+1. **安全な削除 (rmz delete)**: ファイルをTrashZoneに移動し、メタデータを記録
+2. **ファイル復元 (rmz restore)**: 削除したファイルを元の場所に復元
+3. **履歴表示 (rmz list)**: 削除ファイル一覧をカラフルに表示
+4. **永久削除 (rmz purge)**: TrashZone内のファイルを完全削除
+5. **保護リスト**: 重要ファイルの削除を防止
 
 ### Future Features
-- 
-- 
-- 
+- rmz watch: ファイル削除の監視と通知
+- Web UI: ブラウザベースの履歴管理インターフェース
+- クラウドバックアップ: S3/Dropbox連携
 
 ## Security & Compliance
 
 ### Security Measures
-- **Authentication**: 
-- **Authorization**: 
-- **Data Protection**: 
-- **Network Security**: 
+- **File Permissions**: 元のファイル権限を保持
+- **Access Control**: TrashZone はユーザー専用領域
+- **Data Protection**: 設定ファイルは600権限で保護
+- **Safe Defaults**: 重要システムファイルはデフォルトで保護
 
 ### Compliance Considerations
-- **Data Privacy**: 
-- **Legal Requirements**: 
-- **Industry Standards**: 
+- **Data Privacy**: ユーザーデータはローカルのみ保存
+- **Legal Requirements**: OSS ライセンス (MIT/Apache 2.0)
+- **Industry Standards**: Rust セキュリティベストプラクティス準拠
 
 ## Cost Structure
 
 ### Estimated Costs
-- **Development Phase**: $/month
-- **MVP Phase**: $/month
-- **Production Phase**: $/month
+- **Development Phase**: $0/month (OSS)
+- **MVP Phase**: $0/month (GitHub無料枠)
+- **Production Phase**: $0/month (静的サイトホスティング)
 
 ### Cost Breakdown
-- **Infrastructure**: 
-- **Third-party Services**: 
-- **Scaling Factors**: 
+- **Infrastructure**: GitHub (無料)
+- **Third-party Services**: CI/CD (GitHub Actions無料枠)
+- **Scaling Factors**: ダウンロード数に関わらず無料
 
 ## Development Workflow
 
 ### Current Status
-- **Phase**: 
-- **Sprint**: 
-- **Milestone**: 
+- **Phase**: 初期開発
+- **Sprint**: MVP機能実装
+- **Milestone**: v0.1.0リリース準備
 
 ### Active Development
-1. 
-2. 
-3. 
+1. 基本的な削除・復元機能の実装
+2. CLIインターフェースの設計
+3. テストカバレッジの向上
 
 ## Progress Management Rules
 
@@ -143,37 +157,39 @@ git worktree add ../project-feature ./feature/task-name
 
 ### Module Structure
 
-- `packages/frontend/`: Frontend application
-- `packages/backend/`: Backend services
-- `packages/shared/`: Shared utilities and types
-- `infrastructure/`: Infrastructure as Code
-- `docs/`: Documentation
-- `scripts/`: Utility scripts
+- `src/`: Rustソースコード
+  - `src/bin/`: バイナリエントリポイント
+  - `src/commands/`: サブコマンド実装
+  - `src/core/`: コアビジネスロジック
+  - `src/storage/`: TrashZone管理
+- `tests/`: 統合テスト
+- `docs/`: ドキュメント
+- `scripts/`: ビルド・リリーススクリプト
 
 ### Coding Standards
 
 #### File Naming Conventions
-- **Components**: `PascalCase.tsx` (React/Vue)
-- **Utilities**: `camelCase.ts`
-- **API Handlers**: `kebab-case.ts`
-- **Test Files**: `*.test.ts(x)` or `*.spec.ts(x)`
-- **Type Definitions**: `*.types.ts`
+- **Modules**: `snake_case.rs`
+- **Structs/Enums**: `PascalCase`
+- **Functions**: `snake_case`
+- **Constants**: `SCREAMING_SNAKE_CASE`
+- **Test Files**: `mod tests` in same file
 
 #### Quality Checklist
 実装完了前に以下を確認：
-- `npm run type-check` (TypeScript validation)
-- `npm run lint` (ESLint + Prettier)
-- `npm run test` (Jest tests pass)
-- `npm run build` (Production build succeeds)
+- `cargo check` (型チェック)
+- `cargo clippy` (Lintチェック)
+- `cargo test` (全テストパス)
+- `cargo build --release` (リリースビルド成功)
 
 ### Cloud Integration Guidelines
 
 #### Service Architecture
-- **Authentication**: 
-- **Database**: 
-- **Storage**: 
-- **Compute**: 
-- **CDN**: 
+- **Binary Distribution**: GitHub Releases
+- **Package Managers**: Homebrew, Cargo, AUR
+- **Documentation**: GitHub Pages
+- **CI/CD**: GitHub Actions
+- **Community**: GitHub Issues/Discussions
 
 #### Security Principles
 - Principle of least privilege
@@ -193,11 +209,11 @@ The following practices are strictly prohibited:
 - Ignoring PROGRESS.md and DEVELOPMENT_ROADMAP.md updates
 
 ### Post-Implementation Checklist
--  All tests pass
--  Type checking passes
--  Linting passes
--  Documentation updated
--  PROGRESS.md updated with completed and next tasks
--  DEVELOPMENT_ROADMAP.md updated with progress
--  Changes committed with descriptive message
--  Pull Request created with clear description
+-  cargo test 全パス
+-  cargo clippy 警告なし
+-  cargo fmt 実行済み
+-  ドキュメント更新済み
+-  PROGRESS.md 更新済み（完了タスクと次のタスク）
+-  DEVELOPMENT_ROADMAP.md 進捗反映済み
+-  意味のあるコミットメッセージ
+-  明確な説明付きPull Request作成
