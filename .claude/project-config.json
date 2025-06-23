@@ -1,0 +1,21 @@
+{
+  "projectName": "rmz",
+  "description": "The next gen rm command",
+  "repositoryUrl": "https://github.com/daktu32/rmz",
+  "targetPath": "/Users/aiq/work/rmz",
+  "prompt": "opensource-development",
+  "team": {
+    "size": 1,
+    "type": "individual",
+    "industry": "technology",
+    "complianceLevel": "low"
+  },
+  "techStack": {
+    "projectType": "cli-tool",
+    "cliLanguage": "Rust",
+    "infrastructure": "Other",
+    "deployment": "GitHub Actions",
+    "monitoring": "Other"
+  },
+  "customizations": {}
+}

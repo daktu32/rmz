@@ -1,0 +1,37 @@
+[package]
+name = "rmz"
+version = "0.1.0"
+edition = "2021"
+authors = ["rmz contributors"]
+description = "The next gen rm command"
+homepage = "https://github.com/daktu32/rmz"
+repository = "https://github.com/daktu32/rmz"
+license = "MIT OR Apache-2.0"
+keywords = ["cli", "command-line", "tool"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+# CLI framework
+clap = { version = "4.0", features = ["derive", "cargo"] }
+# Terminal colors
+colored = "2.0"
+# Interactive CLI
+dialoguer = "0.11"
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+# Testing utilities
+tempfile = "3.0"
+assert_cmd = "2.0"
+predicates = "3.0"
+
+[[bin]]
+name = "rmz"
+path = "src/main.rs"
