@@ -1,6 +1,7 @@
 use crate::domain::{FileMeta, TrashItem};
 use crate::infra::{meta_store::MetaStoreInterface, MetaStore};
 use anyhow::Result;
+use crate::ops::safe_file_ops::SafeFileOperation;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
@@ -50,6 +51,8 @@ impl TrashStoreInterface for TrashStore {
         let filename = self.generate_trash_filename(meta);
         let trash_path = date_dir.join(&filename);
 
+        // Move file to trash using safe operation
+        SafeFileOperation::atomic_move(source_path, &trash_path)?;
         // Move file to trash - handle cross-device links
         if let Err(e) = std::fs::rename(source_path, &trash_path) {
             // Check if this is a cross-device link error (errno 18)
@@ -89,8 +92,8 @@ impl TrashStoreInterface for TrashStore {
                 std::fs::create_dir_all(parent)?;
             }
 
-            // Move file back
-            std::fs::rename(&item.trash_path, original_path)?;
+            // Move file back using safe operation
+            SafeFileOperation::atomic_move(&item.trash_path, original_path)?;
 
             // Remove metadata after successful restore
             self.meta_store.delete_metadata(id)?;
