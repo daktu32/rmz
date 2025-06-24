@@ -1,9 +1,13 @@
+use crate::domain::operation_log::OperationType;
 use crate::domain::{Config, FileMeta};
 use crate::infra::meta_store::MetaStoreInterface;
+use crate::infra::operation_logger::JsonOperationLogger;
 use crate::infra::trash_store::TrashStoreInterface;
 use crate::infra::{ConfigManager, MetaStore, TrashStore};
+use crate::utils::OperationRecorder;
 use anyhow::Result;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Execute delete command
 pub fn execute(
@@ -19,6 +23,7 @@ pub fn execute(
     ConfigManager::initialize(&config)?;
 
     let trash_store = TrashStore::new(config.trash_path.clone());
+    let orig_paths = paths.clone();
     let meta_store = MetaStore::new(config.metadata_path());
 
     if dry_run {
@@ -57,6 +62,9 @@ pub fn execute(
             deleted_files.len()
         );
     }
+    let logger = Arc::new(JsonOperationLogger::new(config.logs_path()));
+    let recorder = OperationRecorder::new(logger, OperationType::Delete, orig_paths);
+    recorder.finish(Ok(()))?;
 
     Ok(())
 }
