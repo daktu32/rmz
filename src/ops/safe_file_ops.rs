@@ -87,9 +87,9 @@ impl SafeFileOperation {
 
         #[cfg(unix)]
         {
-            use std::os::unix::fs::MetadataExt;
             snapshot.verify_unchanged()?;
-            fs::rename(source_path, target_path).with_context(|| "Atomic rename failed")?;
+            fs::rename(source_path, target_path)
+                .with_context(|| "Atomic rename failed")?;
         }
 
         #[cfg(windows)]
