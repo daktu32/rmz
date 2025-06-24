@@ -1,6 +1,6 @@
 use crate::domain::OperationLog;
 use anyhow::Result;
-use chrono::{Date, Utc};
+use chrono::NaiveDate;
 use std::path::PathBuf;
 
 /// Interface for logging operations
@@ -19,7 +19,7 @@ impl JsonOperationLogger {
         Self { log_dir }
     }
 
-    fn get_log_file_path(&self, date: Date<Utc>) -> PathBuf {
+    fn get_log_file_path(&self, date: NaiveDate) -> PathBuf {
         self.log_dir
             .join(format!("operations-{}.jsonl", date.format("%Y-%m-%d")))
     }
@@ -28,7 +28,7 @@ impl JsonOperationLogger {
 impl OperationLoggerInterface for JsonOperationLogger {
     fn log_operation(&self, operation: OperationLog) -> Result<()> {
         std::fs::create_dir_all(&self.log_dir)?;
-        let log_file = self.get_log_file_path(operation.timestamp.date());
+        let log_file = self.get_log_file_path(operation.timestamp.date_naive());
         let log_line = serde_json::to_string(&operation)?;
         use std::fs::OpenOptions;
         use std::io::Write;
