@@ -30,7 +30,10 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             to,
             force,
             rename,
-        } => restore::execute(file, id, interactive, all, to, force, rename, cli.verbose),
+        } => {
+            let opts = restore::RestoreOpts { to, force, rename };
+            restore::execute(file, id, interactive, all, opts, cli.verbose)
+        }
         Commands::List {
             json,
             filter,
