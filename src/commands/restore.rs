@@ -1,7 +1,60 @@
 use crate::infra::{trash_store::TrashStoreInterface, ConfigManager, TrashStore};
 use anyhow::Result;
+use dialoguer::Confirm;
 use std::path::PathBuf;
 use uuid::Uuid;
+
+#[cfg(feature = "colors")]
+use colored::Colorize;
+
+/// Check if file exists and get user confirmation for overwrite
+fn check_existing_file_and_confirm(restore_path: &PathBuf, interactive: bool) -> Result<bool> {
+    if !restore_path.exists() {
+        return Ok(true); // File doesn't exist, safe to restore
+    }
+    
+    // File exists, need to handle potential overwrite
+    if !interactive {
+        // Non-interactive mode: fail safely
+        #[cfg(feature = "colors")]
+        anyhow::bail!(
+            "File already exists: {}\nUse --interactive flag to confirm overwrite, or restore to different location with --to",
+            restore_path.display().to_string().red()
+        );
+        #[cfg(not(feature = "colors"))]
+        anyhow::bail!(
+            "File already exists: {}\nUse --interactive flag to confirm overwrite, or restore to different location with --to",
+            restore_path.display()
+        );
+    }
+    
+    // Interactive mode: ask for confirmation
+    #[cfg(feature = "colors")]
+    let prompt = format!(
+        "File already exists: {}\nOverwrite existing file?",
+        restore_path.display().to_string().yellow()
+    );
+    #[cfg(not(feature = "colors"))]
+    let prompt = format!(
+        "File already exists: {}\nOverwrite existing file?",
+        restore_path.display()
+    );
+    
+    let confirmed = Confirm::new()
+        .with_prompt(prompt)
+        .default(false) // Default to "no" for safety
+        .interact()?;
+    
+    if !confirmed {
+        #[cfg(feature = "colors")]
+        println!("⚠️  Restore cancelled - file was not overwritten");
+        #[cfg(not(feature = "colors"))]
+        println!("Restore cancelled - file was not overwritten");
+        return Ok(false);
+    }
+    
+    Ok(true)
+}
 
 /// Execute restore command
 pub fn execute(
@@ -17,16 +70,16 @@ pub fn execute(
 
     if let Some(id_str) = id {
         // Restore by specific ID
-        restore_by_id(&trash_store, &id_str, to, verbose)
+        restore_by_id(&trash_store, &id_str, to, interactive, verbose)
     } else if all {
         // Restore all files (with optional filter)
-        restore_all(&trash_store, file, to, verbose)
+        restore_all(&trash_store, file, to, interactive, verbose)
     } else if interactive {
         // Interactive restore using fuzzy finder
         restore_interactive(&trash_store, file, to, verbose)
     } else if let Some(pattern) = file {
         // Restore by file pattern
-        restore_by_pattern(&trash_store, &pattern, to, verbose)
+        restore_by_pattern(&trash_store, &pattern, to, interactive, verbose)
     } else {
         anyhow::bail!("Must specify one of: --id, --all, --interactive, or file pattern");
     }
@@ -36,6 +89,7 @@ fn restore_by_id(
     trash_store: &TrashStore,
     id_str: &str,
     to: Option<PathBuf>,
+    interactive: bool,
     verbose: bool,
 ) -> Result<()> {
     // Try to parse as full UUID first, then try partial UUID matching
@@ -43,15 +97,15 @@ fn restore_by_id(
         full_id
     } else if id_str.len() >= 8 {
         // Try to find by partial ID (minimum 8 characters for safety)
-        return restore_by_partial_id(trash_store, id_str, to, verbose);
+        return restore_by_partial_id(trash_store, id_str, to, interactive, verbose);
     } else {
         return Err(anyhow::anyhow!("ID must be at least 8 characters long: {}", id_str));
     };
 
     if let Some(item) = trash_store.find_by_id(&id)? {
-        let restore_path = if let Some(to_path) = to {
+        let final_restore_path = if let Some(ref to_path) = to {
             // Restore to specific location
-            let final_path = if to_path.is_dir() {
+            if to_path.is_dir() {
                 // If target is directory, use original filename
                 if let Some(filename) = item.meta.filename() {
                     to_path.join(filename)
@@ -59,19 +113,30 @@ fn restore_by_id(
                     anyhow::bail!("Cannot determine filename for restoration");
                 }
             } else {
-                to_path
-            };
+                to_path.clone()
+            }
+        } else {
+            // Restore to original location
+            item.meta.original_path.clone()
+        };
 
+        // Check if target file already exists and get confirmation
+        if !check_existing_file_and_confirm(&final_restore_path, interactive)? {
+            return Ok(()); // User cancelled restoration
+        }
+
+        let restore_path = if to.is_some() {
+            // Restore to specific location
             // Ensure parent directory exists
-            if let Some(parent) = final_path.parent() {
+            if let Some(parent) = final_restore_path.parent() {
                 std::fs::create_dir_all(parent)?;
             }
 
             // Move file to new location
-            std::fs::rename(&item.trash_path, &final_path)?;
-            final_path
+            std::fs::rename(&item.trash_path, &final_restore_path)?;
+            final_restore_path
         } else {
-            // Restore to original location
+            // Restore to original location using TrashStore
             trash_store.restore(&id)?
         };
 
@@ -91,6 +156,7 @@ fn restore_by_partial_id(
     trash_store: &TrashStore,
     partial_id: &str,
     to: Option<PathBuf>,
+    interactive: bool,
     verbose: bool,
 ) -> Result<()> {
     let items = trash_store.list()?;
@@ -107,7 +173,7 @@ fn restore_by_partial_id(
         1 => {
             // Exactly one match, restore it
             let item = &matches[0];
-            let _restore_path = if let Some(to_path) = to {
+            let final_restore_path = if let Some(ref to_path) = to {
                 if to_path.is_dir() {
                     if let Some(filename) = item.meta.filename() {
                         to_path.join(filename)
@@ -115,16 +181,31 @@ fn restore_by_partial_id(
                         return Err(anyhow::anyhow!("Cannot determine filename for restoration"));
                     }
                 } else {
-                    to_path
+                    to_path.clone()
                 }
             } else {
                 item.meta.original_path.clone()
             };
             
-            let actual_restore_path = trash_store.restore(&item.meta.id)?;
+            // Check if target file already exists and get confirmation
+            if !check_existing_file_and_confirm(&final_restore_path, interactive)? {
+                return Ok(()); // User cancelled restoration
+            }
+            
+            let actual_restore_path = if to.is_some() {
+                // Custom location restore with file check already done
+                if let Some(parent) = final_restore_path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::rename(&item.trash_path, &final_restore_path)?;
+                final_restore_path
+            } else {
+                // Original location restore using TrashStore
+                trash_store.restore(&item.meta.id)?
+            };
             
             if verbose {
-                println!("Restored {} -> {}", item.meta.original_path.display(), actual_restore_path.display());
+                println!("✅ Restored {} -> {}", item.meta.original_path.display(), actual_restore_path.display());
             } else {
                 println!("Restored: {}", actual_restore_path.display());
             }
@@ -155,6 +236,7 @@ fn restore_all(
     trash_store: &TrashStore,
     filter: Option<String>,
     to: Option<PathBuf>,
+    interactive: bool,
     verbose: bool,
 ) -> Result<()> {
     let items = trash_store.list()?;
@@ -188,11 +270,17 @@ fn restore_all(
 
     let mut restored_count = 0;
     for item in filtered_items {
-        match restore_single_item(trash_store, &item, to.clone(), verbose) {
-            Ok(path) => {
+        match restore_single_item(trash_store, &item, to.clone(), interactive, verbose) {
+            Ok(Some(path)) => {
                 restored_count += 1;
                 if verbose {
                     println!("✅ Restored: {}", path.display());
+                }
+            }
+            Ok(None) => {
+                // User cancelled restoration for this item
+                if verbose {
+                    println!("⚠️ Skipped: {}", item.meta.original_path.display());
                 }
             }
             Err(e) => {
@@ -213,6 +301,7 @@ fn restore_by_pattern(
     trash_store: &TrashStore,
     pattern: &str,
     to: Option<PathBuf>,
+    interactive: bool,
     verbose: bool,
 ) -> Result<()> {
     let items = trash_store.list()?;
@@ -229,8 +318,10 @@ fn restore_by_pattern(
     if matching_items.len() == 1 {
         // Single match, restore directly
         let item = &matching_items[0];
-        let path = restore_single_item(trash_store, item, to, verbose)?;
-        println!("Restored: {}", path.display());
+        match restore_single_item(trash_store, item, to, interactive, verbose)? {
+            Some(path) => println!("Restored: {}", path.display()),
+            None => println!("Restoration cancelled"),
+        }
     } else {
         // Multiple matches, show list and ask for selection
         println!("Multiple files match '{}': ", pattern);
@@ -246,10 +337,16 @@ fn restore_by_pattern(
         // For now, restore all matching files
         // TODO: Add interactive selection
         for item in matching_items {
-            match restore_single_item(trash_store, &item, to.clone(), verbose) {
-                Ok(path) => {
+            match restore_single_item(trash_store, &item, to.clone(), interactive, verbose) {
+                Ok(Some(path)) => {
                     if verbose {
                         println!("✅ Restored: {}", path.display());
+                    }
+                }
+                Ok(None) => {
+                    // User cancelled restoration for this item
+                    if verbose {
+                        println!("⚠️ Skipped: {}", item.meta.original_path.display());
                     }
                 }
                 Err(e) => {
@@ -280,34 +377,47 @@ fn restore_single_item(
     trash_store: &TrashStore,
     item: &crate::domain::TrashItem,
     to: Option<PathBuf>,
+    interactive: bool,
     _verbose: bool,
-) -> Result<PathBuf> {
-    if let Some(to_path) = to {
+) -> Result<Option<PathBuf>> {
+    let final_restore_path = if let Some(ref to_path) = to {
         // Restore to specific location
-        let final_path = if to_path.is_dir() {
+        if to_path.is_dir() {
             if let Some(filename) = item.meta.filename() {
                 to_path.join(filename)
             } else {
                 anyhow::bail!("Cannot determine filename for restoration");
             }
         } else {
-            to_path
-        };
+            to_path.clone()
+        }
+    } else {
+        // Restore to original location
+        item.meta.original_path.clone()
+    };
 
+    // Check if target file already exists and get confirmation
+    if !check_existing_file_and_confirm(&final_restore_path, interactive)? {
+        return Ok(None); // User cancelled restoration
+    }
+
+    if to.is_some() {
+        // Restore to specific location
         // Ensure parent directory exists
-        if let Some(parent) = final_path.parent() {
+        if let Some(parent) = final_restore_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
         // Move file to new location
-        std::fs::rename(&item.trash_path, &final_path)?;
+        std::fs::rename(&item.trash_path, &final_restore_path)?;
 
         // Remove metadata (manual cleanup since we're not using trash_store.restore())
         // Note: This is a bit awkward - we should refactor TrashStore to handle this better
-        Ok(final_path)
+        Ok(Some(final_restore_path))
     } else {
         // Restore to original location
-        trash_store.restore(&item.meta.id)
+        let restored_path = trash_store.restore(&item.meta.id)?;
+        Ok(Some(restored_path))
     }
 }
 
@@ -354,7 +464,7 @@ mod tests {
         assert!(!original_path.exists());
 
         // Restore by ID
-        let result = restore_by_id(&trash_store, &id.to_string(), None, false);
+        let result = restore_by_id(&trash_store, &id.to_string(), None, false, false);
         assert!(result.is_ok());
         assert!(original_path.exists());
         assert_eq!(fs::read_to_string(&original_path).unwrap(), "test content");
@@ -365,7 +475,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let trash_store = TrashStore::new(temp_dir.path().join("trash"));
 
-        let result = restore_by_id(&trash_store, "xyz", None, false);
+        let result = restore_by_id(&trash_store, "xyz", None, false, false);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
@@ -379,7 +489,7 @@ mod tests {
         let trash_store = TrashStore::new(temp_dir.path().join("trash"));
 
         let nonexistent_id = uuid::Uuid::new_v4();
-        let result = restore_by_id(&trash_store, &nonexistent_id.to_string(), None, false);
+        let result = restore_by_id(&trash_store, &nonexistent_id.to_string(), None, false, false);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
@@ -411,6 +521,7 @@ mod tests {
             &id.to_string(),
             Some(restore_target.clone()),
             false,
+            false,
         );
         assert!(result.is_ok());
 
@@ -418,5 +529,52 @@ mod tests {
         let expected_path = restore_target.join(meta.filename().unwrap());
         assert!(expected_path.exists());
         assert_eq!(fs::read_to_string(&expected_path).unwrap(), "test content");
+    }
+
+    #[test]
+    fn test_restore_existing_file_non_interactive() {
+        let temp_dir = TempDir::new().unwrap();
+        let trash_store = TrashStore::new(temp_dir.path().join("trash"));
+
+        // Create and delete a file
+        let original_path = temp_dir.path().join("test_file.txt");
+        fs::write(&original_path, "original content").unwrap();
+        let meta = crate::domain::FileMeta::from_path(&original_path).unwrap();
+        let id = meta.id;
+        trash_store.save(&meta, &original_path).unwrap();
+        assert!(!original_path.exists());
+
+        // Create a new file at the same location
+        fs::write(&original_path, "new content").unwrap();
+
+        // Try to restore (should fail in non-interactive mode)
+        let result = restore_by_id(&trash_store, &id.to_string(), None, false, false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("File already exists"));
+
+        // Original file should still contain new content
+        assert_eq!(fs::read_to_string(&original_path).unwrap(), "new content");
+    }
+
+    #[test]
+    fn test_check_existing_file_and_confirm_no_conflict() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_path = temp_dir.path().join("no_conflict.txt");
+
+        // File doesn't exist - should return true
+        let result = check_existing_file_and_confirm(&test_path, false).unwrap();
+        assert!(result);
+    }
+
+    #[test] 
+    fn test_check_existing_file_and_confirm_non_interactive() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_path = temp_dir.path().join("conflict.txt");
+        fs::write(&test_path, "existing content").unwrap();
+
+        // File exists, non-interactive mode - should return error
+        let result = check_existing_file_and_confirm(&test_path, false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("File already exists"));
     }
 }
