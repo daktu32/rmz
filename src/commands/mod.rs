@@ -28,7 +28,9 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             interactive,
             all,
             to,
-        } => restore::execute(file, id, interactive, all, to, cli.verbose),
+            force,
+            rename,
+        } => restore::execute(file, id, interactive, all, to, force, rename, cli.verbose),
         Commands::List {
             json,
             filter,
