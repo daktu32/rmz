@@ -1,5 +1,6 @@
 pub mod delete;
 pub mod list;
+pub mod purge;
 pub mod restore;
 pub mod status;
 
@@ -21,7 +22,8 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             dry_run,
             tag,
             interactive,
-        } => delete::execute(paths, force, dry_run, tag, interactive, cli.verbose),
+            recursive,
+        } => delete::execute(paths, force, dry_run, tag, interactive, recursive, cli.verbose),
         Commands::Restore {
             file,
             id,
@@ -37,6 +39,13 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             limit,
         } => list::execute(json, filter, since, group_by, limit, cli.verbose),
         Commands::Status { detailed } => status::execute(detailed, cli.verbose),
+        Commands::Purge {
+            all,
+            days,
+            size,
+            id,
+            interactive,
+        } => purge::execute(all, days, size, id, interactive, cli.verbose),
         _ => {
             println!("Command not yet implemented");
             Ok(())
