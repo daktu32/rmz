@@ -1,5 +1,9 @@
+pub mod config;
 pub mod delete;
 pub mod list;
+pub mod log;
+pub mod protect;
+pub mod purge;
 pub mod restore;
 pub mod status;
 
@@ -38,6 +42,20 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             limit,
         } => list::execute(json, filter, since, group_by, limit, cli.verbose),
         Commands::Status { detailed } => status::execute(detailed, cli.verbose),
+        Commands::Purge {
+            all,
+            days,
+            size,
+            id,
+            interactive,
+        } => purge::execute(all, days, size, id, interactive, cli.verbose),
+        Commands::Log {
+            detailed,
+            operation,
+            since,
+        } => log::execute(detailed, operation, since, cli.verbose),
+        Commands::Protect { action } => protect::execute(action, cli.verbose),
+        Commands::Config { action } => config::execute(action, cli.verbose),
         _ => {
             println!("Command not yet implemented");
             Ok(())

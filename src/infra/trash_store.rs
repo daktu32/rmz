@@ -134,8 +134,12 @@ impl TrashStoreInterface for TrashStore {
 
     fn purge(&self, id: &Uuid) -> Result<()> {
         if let Some(item) = self.find_by_id(id)? {
-            // Remove the actual file
-            std::fs::remove_file(&item.trash_path)?;
+            // Remove the actual file or directory
+            if item.trash_path.is_dir() {
+                std::fs::remove_dir_all(&item.trash_path)?;
+            } else {
+                std::fs::remove_file(&item.trash_path)?;
+            }
 
             // Remove metadata through MetaStore
             self.meta_store.delete_metadata(id)?;
