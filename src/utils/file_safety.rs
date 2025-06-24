@@ -91,8 +91,8 @@ fn format_size(size: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_generate_safe_restore_path() {
@@ -112,4 +112,3 @@ mod tests {
         matches!(action, RestoreAction::Proceed);
     }
 }
-

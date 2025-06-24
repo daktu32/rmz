@@ -196,7 +196,9 @@ fn restore_single_item(
     auto_rename: bool,
     _verbose: bool,
 ) -> Result<PathBuf> {
-    use crate::utils::file_safety::{check_existing_file, generate_safe_restore_path, RestoreAction};
+    use crate::utils::file_safety::{
+        check_existing_file, generate_safe_restore_path, RestoreAction,
+    };
 
     let mut final_path = if let Some(to_path) = to.as_ref() {
         if to_path.is_dir() {
@@ -315,7 +317,14 @@ mod tests {
         let trash_store = TrashStore::new(temp_dir.path().join("trash"));
 
         let nonexistent_id = uuid::Uuid::new_v4();
-        let result = restore_by_id(&trash_store, &nonexistent_id.to_string(), None, false, false, false);
+        let result = restore_by_id(
+            &trash_store,
+            &nonexistent_id.to_string(),
+            None,
+            false,
+            false,
+            false,
+        );
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
