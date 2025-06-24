@@ -53,6 +53,28 @@ impl TrashStoreInterface for TrashStore {
 
         // Move file to trash using safe operation
         SafeFileOperation::atomic_move(source_path, &trash_path)?;
+        // Move file to trash - handle cross-device links
+        if let Err(e) = std::fs::rename(source_path, &trash_path) {
+            // Check if this is a cross-device link error (errno 18)
+            if e.raw_os_error() == Some(18) {
+                // Cross-device link - use copy + remove fallback
+                if source_path.is_dir() {
+                    copy_dir_recursive(source_path, &trash_path)?;
+                } else {
+                    std::fs::copy(source_path, &trash_path)?;
+                }
+                
+                // Remove original after successful copy
+                if source_path.is_dir() {
+                    std::fs::remove_dir_all(source_path)?;
+                } else {
+                    std::fs::remove_file(source_path)?;
+                }
+            } else {
+                // Other error - propagate it
+                return Err(e.into());
+            }
+        }
 
         // Save metadata through MetaStore
         self.meta_store.save_metadata(meta)?;
@@ -146,6 +168,38 @@ impl TrashStoreInterface for TrashStore {
             Ok(None)
         }
     }
+}
+
+/// Recursively copy a directory and all its contents to a new location
+fn copy_dir_recursive(source: &Path, destination: &Path) -> Result<()> {
+    // Create the destination directory
+    std::fs::create_dir_all(destination)?;
+    
+    // Iterate through the source directory
+    for entry in std::fs::read_dir(source)? {
+        let entry = entry?;
+        let source_path = entry.path();
+        let dest_path = destination.join(entry.file_name());
+        
+        if source_path.is_dir() {
+            // Recursively copy subdirectory
+            copy_dir_recursive(&source_path, &dest_path)?;
+        } else {
+            // Copy file
+            std::fs::copy(&source_path, &dest_path)?;
+            
+            // Preserve file permissions
+            if let Ok(_metadata) = std::fs::metadata(&source_path) {
+                if let Ok(permissions) = std::fs::metadata(&dest_path) {
+                    let mut dest_permissions = permissions.permissions();
+                    dest_permissions.set_readonly(false);
+                    std::fs::set_permissions(&dest_path, dest_permissions).ok();
+                }
+            }
+        }
+    }
+    
+    Ok(())
 }
 
 #[cfg(test)]
@@ -253,5 +307,39 @@ mod tests {
         let nonexistent_id = Uuid::new_v4();
         let result = trash_store.find_by_id(&nonexistent_id).unwrap();
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_copy_dir_recursive() {
+        let temp_dir = TempDir::new().unwrap();
+        
+        // Create source directory structure
+        let source_dir = temp_dir.path().join("source");
+        std::fs::create_dir(&source_dir).unwrap();
+        std::fs::write(source_dir.join("file1.txt"), "content1").unwrap();
+        
+        let subdir = source_dir.join("subdir");
+        std::fs::create_dir(&subdir).unwrap();
+        std::fs::write(subdir.join("file2.txt"), "content2").unwrap();
+        
+        // Copy to destination
+        let dest_dir = temp_dir.path().join("dest");
+        copy_dir_recursive(&source_dir, &dest_dir).unwrap();
+        
+        // Verify structure was copied
+        assert!(dest_dir.exists());
+        assert!(dest_dir.join("file1.txt").exists());
+        assert!(dest_dir.join("subdir").exists());
+        assert!(dest_dir.join("subdir/file2.txt").exists());
+        
+        // Verify content
+        assert_eq!(
+            std::fs::read_to_string(dest_dir.join("file1.txt")).unwrap(),
+            "content1"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest_dir.join("subdir/file2.txt")).unwrap(),
+            "content2"
+        );
     }
 }

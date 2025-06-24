@@ -38,8 +38,15 @@ fn restore_by_id(
     to: Option<PathBuf>,
     verbose: bool,
 ) -> Result<()> {
-    let id =
-        Uuid::parse_str(id_str).map_err(|_| anyhow::anyhow!("Invalid UUID format: {}", id_str))?;
+    // Try to parse as full UUID first, then try partial UUID matching
+    let id = if let Ok(full_id) = Uuid::parse_str(id_str) {
+        full_id
+    } else if id_str.len() >= 8 {
+        // Try to find by partial ID (minimum 8 characters for safety)
+        return restore_by_partial_id(trash_store, id_str, to, verbose);
+    } else {
+        return Err(anyhow::anyhow!("ID must be at least 8 characters long: {}", id_str));
+    };
 
     if let Some(item) = trash_store.find_by_id(&id)? {
         let restore_path = if let Some(to_path) = to {
@@ -78,6 +85,70 @@ fn restore_by_id(
     }
 
     Ok(())
+}
+
+fn restore_by_partial_id(
+    trash_store: &TrashStore,
+    partial_id: &str,
+    to: Option<PathBuf>,
+    verbose: bool,
+) -> Result<()> {
+    let items = trash_store.list()?;
+    let partial_id_lower = partial_id.to_lowercase();
+    
+    // Find all items that start with the partial ID
+    let matches: Vec<_> = items
+        .into_iter()
+        .filter(|item| item.meta.id.to_string().to_lowercase().starts_with(&partial_id_lower))
+        .collect();
+    
+    match matches.len() {
+        0 => anyhow::bail!("No files matching partial ID '{}' found in trash", partial_id),
+        1 => {
+            // Exactly one match, restore it
+            let item = &matches[0];
+            let _restore_path = if let Some(to_path) = to {
+                if to_path.is_dir() {
+                    if let Some(filename) = item.meta.filename() {
+                        to_path.join(filename)
+                    } else {
+                        return Err(anyhow::anyhow!("Cannot determine filename for restoration"));
+                    }
+                } else {
+                    to_path
+                }
+            } else {
+                item.meta.original_path.clone()
+            };
+            
+            let actual_restore_path = trash_store.restore(&item.meta.id)?;
+            
+            if verbose {
+                println!("Restored {} -> {}", item.meta.original_path.display(), actual_restore_path.display());
+            } else {
+                println!("Restored: {}", actual_restore_path.display());
+            }
+            
+            Ok(())
+        }
+        _ => {
+            // Multiple matches, show them and ask user to be more specific
+            println!("Multiple files match partial ID '{}': ", partial_id);
+            println!("──────────────────────────────────────────────────────────────────────");
+            
+            for item in &matches {
+                let id_display = item.meta.id.to_string().chars().take(8).collect::<String>();
+                let filename = item.meta.filename().unwrap_or("unknown");
+                println!("📄 {} - {} - {}", 
+                    filename,
+                    item.meta.deleted_at.format("%Y-%m-%d %H:%M:%S"),
+                    id_display
+                );
+            }
+            
+            anyhow::bail!("Please provide a more specific ID to uniquely identify the file")
+        }
+    }
 }
 
 fn restore_all(
@@ -294,12 +365,12 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let trash_store = TrashStore::new(temp_dir.path().join("trash"));
 
-        let result = restore_by_id(&trash_store, "invalid-uuid", None, false);
+        let result = restore_by_id(&trash_store, "xyz", None, false);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
             .to_string()
-            .contains("Invalid UUID format"));
+            .contains("ID must be at least 8 characters long"));
     }
 
     #[test]
