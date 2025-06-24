@@ -52,6 +52,10 @@ pub enum Commands {
         /// Interactive mode with confirmation prompts
         #[arg(short, long)]
         interactive: bool,
+
+        /// Recursively delete directories and their contents
+        #[arg(short, long)]
+        recursive: bool,
     },
 
     /// Restore files from trash zone
