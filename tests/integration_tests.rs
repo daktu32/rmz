@@ -66,5 +66,5 @@ fn test_restore_invalid_id() {
         .arg("invalid-id")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("Invalid UUID format"));
+        .stderr(predicate::str::contains("No files matching partial ID"));
 }

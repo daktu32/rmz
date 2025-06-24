@@ -1,0 +1,18 @@
+
+services:
+  rmz-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rmz-testing
+    volumes:
+      - rmz-data:/home/rmzuser/.rmz
+    working_dir: /home/rmzuser
+    stdin_open: true
+    tty: true
+    environment:
+      - RUST_LOG=debug
+
+volumes:
+  rmz-data:
+    driver: local

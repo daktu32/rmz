@@ -21,7 +21,8 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             dry_run,
             tag,
             interactive,
-        } => delete::execute(paths, force, dry_run, tag, interactive, cli.verbose),
+            recursive,
+        } => delete::execute(paths, force, dry_run, tag, interactive, recursive, cli.verbose),
         Commands::Restore {
             file,
             id,
