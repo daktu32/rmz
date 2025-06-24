@@ -79,6 +79,14 @@ pub enum Commands {
         /// Restore to specific path instead of original location
         #[arg(long)]
         to: Option<PathBuf>,
+
+        /// Overwrite existing files without confirmation
+        #[arg(long)]
+        force: bool,
+
+        /// Automatically rename restored file if target exists
+        #[arg(long, conflicts_with = "force")]
+        rename: bool,
     },
 
     /// List deleted files in trash zone

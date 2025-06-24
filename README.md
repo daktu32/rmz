@@ -35,6 +35,10 @@ rmz example
 
 # 詳細モードで実行
 rmz example --verbose
+# 既存ファイルを強制上書きで復元
+rmz restore --id <uuid> --force
+# 既存ファイルがある場合は自動リネーム
+rmz restore --id <uuid> --rename
 ```
 
 ## 開発
