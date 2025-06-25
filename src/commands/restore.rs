@@ -1,4 +1,11 @@
-use crate::infra::{trash_store::TrashStoreInterface, ConfigManager, TrashStore};
+use crate::infra::{
+    trash_store::TrashStoreInterface, 
+    ConfigManager, 
+    TrashStore, 
+    create_selector,
+    operation_logger::log_operation
+};
+use crate::domain::operation_log::{OperationType, OperationLog, OperationResult};
 use anyhow::Result;
 use dialoguer::Confirm;
 use std::path::PathBuf;
@@ -364,13 +371,95 @@ fn restore_by_pattern(
 }
 
 fn restore_interactive(
-    _trash_store: &TrashStore,
-    _filter: Option<String>,
-    _to: Option<PathBuf>,
-    _verbose: bool,
+    trash_store: &TrashStore,
+    filter: Option<String>,
+    to: Option<PathBuf>,
+    verbose: bool,
 ) -> Result<()> {
-    // TODO: Implement fuzzy finder integration
-    anyhow::bail!("Interactive restore not yet implemented. Use 'rmz list' to see available files and restore by ID.");
+    // Get all items from trash
+    let mut items = trash_store.list()?;
+    
+    if items.is_empty() {
+        #[cfg(feature = "colors")]
+        println!("📂 {}", "Trash is empty".yellow());
+        #[cfg(not(feature = "colors"))]
+        println!("Trash is empty");
+        return Ok(());
+    }
+    
+    // Apply filter if provided
+    if let Some(filter_pattern) = &filter {
+        let pattern_lower = filter_pattern.to_lowercase();
+        items = items
+            .into_iter()
+            .filter(|item| {
+                item.meta.original_path
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .contains(&pattern_lower)
+            })
+            .collect();
+        
+        if items.is_empty() {
+            #[cfg(feature = "colors")]
+            println!("📂 {}", format!("No files match filter: {}", filter_pattern).yellow());
+            #[cfg(not(feature = "colors"))]
+            println!("No files match filter: {}", filter_pattern);
+            return Ok(());
+        }
+    }
+    
+    // Sort by deletion time (newest first)
+    items.sort_by(|a, b| b.meta.deleted_at.cmp(&a.meta.deleted_at));
+    
+    // Create selector based on system capabilities
+    let selector = create_selector();
+    
+    if verbose {
+        #[cfg(feature = "colors")]
+        println!("🔍 {}", "Launching interactive file selector...".cyan());
+        #[cfg(not(feature = "colors"))]
+        println!("Launching interactive file selector...");
+    }
+    
+    // Select item(s) for restoration
+    match selector.select_trash_item(&items)? {
+        Some(selected_item) => {
+            // Restore the selected item
+            let restored_path = restore_single_item(trash_store, &selected_item, to, true, verbose)?;
+            
+            if let Some(path) = restored_path {
+                #[cfg(feature = "colors")]
+                println!("✅ {}: {}", 
+                    "Restored".green().bold(), 
+                    path.display().to_string().cyan()
+                );
+                #[cfg(not(feature = "colors"))]
+                println!("✅ Restored: {}", path.display());
+                
+                // Log the operation
+                let log_entry = OperationLog::new(
+                    OperationType::Restore,
+                    vec![selected_item.meta.original_path.clone()],
+                    OperationResult::Success,
+                ).with_file_ids(vec![selected_item.meta.id]);
+                let _ = log_operation(log_entry);
+            } else {
+                #[cfg(feature = "colors")]
+                println!("⚠️  {}", "Restore cancelled".yellow());
+                #[cfg(not(feature = "colors"))]
+                println!("⚠️ Restore cancelled");
+            }
+        }
+        None => {
+            #[cfg(feature = "colors")]
+            println!("⚠️  {}", "No file selected".yellow());
+            #[cfg(not(feature = "colors"))]
+            println!("⚠️ No file selected");
+        }
+    }
+    
+    Ok(())
 }
 
 fn restore_single_item(

@@ -163,9 +163,21 @@ pub enum Commands {
 
     /// Run system diagnostics
     Doctor {
+        /// Specific diagnostic check to run
+        #[arg(long, value_enum)]
+        check: Option<DiagnosticCheck>,
+
         /// Fix issues automatically
         #[arg(long)]
         fix: bool,
+
+        /// Enable verbose output
+        #[arg(short, long)]
+        verbose: bool,
+
+        /// Force operations without confirmation
+        #[arg(short, long)]
+        force: bool,
     },
 
     /// Generate shell completion scripts
@@ -222,4 +234,17 @@ pub enum OperationType {
     Delete,
     Restore,
     Purge,
+    Status,
+    Protect,
+    Doctor,
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+pub enum DiagnosticCheck {
+    TrashZone,
+    Metadata,
+    Permissions,
+    Config,
+    Dependencies,
+    All,
 }

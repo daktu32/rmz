@@ -11,6 +11,9 @@ pub enum OperationType {
     Purge,
     List,
     Config,
+    Status,
+    Protect,
+    Doctor,
 }
 
 /// Result of an operation
@@ -118,6 +121,9 @@ impl OperationLog {
             OperationType::Purge => "Purge",
             OperationType::List => "List",
             OperationType::Config => "Config",
+            OperationType::Status => "Status",
+            OperationType::Protect => "Protect",
+            OperationType::Doctor => "Doctor",
         };
 
         let paths_str = if self.paths.len() == 1 {

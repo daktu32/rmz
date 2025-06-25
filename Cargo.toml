@@ -55,6 +55,9 @@ thiserror = "1.0"
 # Cryptography
 sha2 = "0.10"
 
+# System utilities
+which = "5.0"
+
 [dev-dependencies]
 # Testing Framework
 tempfile = "3.8"

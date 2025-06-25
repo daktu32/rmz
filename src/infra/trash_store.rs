@@ -28,6 +28,10 @@ impl TrashStore {
         }
     }
 
+    pub fn get_trash_root(&self) -> &PathBuf {
+        &self.trash_root
+    }
+
     /// Get the subdirectory for a given date
     fn get_date_subdir(&self, meta: &FileMeta) -> PathBuf {
         let date_str = meta.deleted_at.format("%Y-%m-%d").to_string();

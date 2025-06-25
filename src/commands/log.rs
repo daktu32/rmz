@@ -260,6 +260,9 @@ fn convert_operation_type(cli_op: OperationType) -> crate::domain::operation_log
         OperationType::Delete => crate::domain::operation_log::OperationType::Delete,
         OperationType::Restore => crate::domain::operation_log::OperationType::Restore,
         OperationType::Purge => crate::domain::operation_log::OperationType::Purge,
+        OperationType::Status => crate::domain::operation_log::OperationType::Status,
+        OperationType::Protect => crate::domain::operation_log::OperationType::Protect,
+        OperationType::Doctor => crate::domain::operation_log::OperationType::Doctor,
     }
 }
 
