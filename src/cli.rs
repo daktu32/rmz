@@ -186,6 +186,33 @@ pub enum Commands {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+
+    /// Extract files from deleted directories without restoring
+    Extract {
+        /// Directory ID to extract from
+        #[arg(long)]
+        from: Option<String>,
+
+        /// Specific file name or pattern to extract
+        #[arg(long)]
+        file: Option<String>,
+
+        /// Interactive selection using fuzzy finder
+        #[arg(short, long)]
+        interactive: bool,
+
+        /// Extract all files matching pattern
+        #[arg(long)]
+        all: bool,
+
+        /// Extract to specific path instead of current directory
+        #[arg(long)]
+        to: Option<PathBuf>,
+
+        /// Show tree structure of directory contents
+        #[arg(long)]
+        tree: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]

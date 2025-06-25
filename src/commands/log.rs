@@ -14,7 +14,7 @@ pub fn execute(
     verbose: bool,
 ) -> Result<()> {
     let config = Config::load()?;
-    let log_file_path = config.logs_path().join("operations.log");
+    let log_file_path = config.logs_path().join("operations.jsonl");
     let logger = OperationLogger::new(log_file_path);
     
     // Parse since date if provided

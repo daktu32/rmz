@@ -2,6 +2,7 @@ pub mod completions;
 pub mod config;
 pub mod delete;
 pub mod doctor;
+pub mod extract;
 pub mod list;
 pub mod log;
 pub mod protect;
@@ -71,5 +72,8 @@ pub fn execute_command(cli: Cli) -> anyhow::Result<()> {
             crate::commands::doctor::execute(doctor_check, fix, verbose, force)
         },
         Commands::Completions { shell } => completions::execute(shell, cli.verbose),
+        Commands::Extract { from, file, interactive, all, to, tree } => {
+            extract::execute(from, file, interactive, all, to, tree, cli.verbose)
+        },
     }
 }
