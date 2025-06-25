@@ -275,7 +275,7 @@ npm run test:local             # Local testing
 
 ### 📚 Reference Documentation
 
-- [Product Requirements](docs/prd.md)
+- [Product Requirements](docs/dev/prd.md)
 - [System Architecture](docs/ARCHITECTURE.md)
 - [Technology Stack](docs/tech-stack.md)
 - [Implementation Plan](docs/implementation-plan.md)

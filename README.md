@@ -1,108 +1,77 @@
 # rmz
 
-The next gen rm command
+> **Don’t worry, I’m wearing `rmz`.**  
+> A safe, reversible layer for every file you remove.
 
-## 概要
+`rmz` is a safer alternative to `rm`.  
+Instead of permanently deleting your files, it moves them to a hidden zone (`.rmz/`),  
+where they remain recoverable — until you decide otherwise.
 
-rmz は Rust で開発された CLI ツールです。
+So go ahead.  
+Delete with confidence.  
+Nothing’s truly gone, just safely stored away.
 
-## インストール
+---
 
-### Cargo を使用してインストール
+## Features
 
-```bash
-cargo install rmz
-```
+- 🛡️ `rm`-compatible CLI — replace `rm` without changing your habits
+- ♻️ Safe file removal — files are moved, not destroyed
+- 🔍 `rmz list` — browse past deletions grouped by operation
+- 🌲 `--tree` view — see deleted files in their original structure
+- 🧪 `--dry-run` — preview restoration conflicts, directories to be created
+- ✅ UUID-based tracking — accurate, collision-free identification
+- 💥 `rmz purge` — permanently erase when *you* decide to
 
-### ソースからビルド
+---
 
-```bash
-git clone https://github.com/daktu32/rmz
-cd rmz
-cargo build --release
-```
+## Philosophy
 
-## 使用方法
+> It’s not just `rm`. It’s `rm`, with a conscience.
 
-### 基本コマンド
+### Why the “z”?
 
-```bash
-# ヘルプを表示
-rmz --help
+The **z** in `rmz` stands for:
 
-# 例コマンドを実行
-rmz example
+- **Zone** – a shadow space where deleted files are safely held
+- **Zero-impact** – your deletions won’t destroy, just detach
+- **Zenith** – the final evolution of `rm`: safety-first and user-forgiving
 
-# 詳細モードで実行
-rmz example --verbose
-```
+It’s a shell, a safeguard, a second chance.
 
-## 開発
+---
 
-### 前提条件
-
-- Rust 1.70 以上
-
-### セットアップ
+## Example
 
 ```bash
-git clone https://github.com/daktu32/rmz
-cd rmz
-cargo build
-```
+# Remove a file
+$ rmz delete main.rs
 
-### テスト実行
+# List deleted operations
+$ rmz list
 
-```bash
-cargo test
-```
+# View the structure of a deletion
+$ rmz list --tree 1a2b3c4d
 
-### フォーマットとリント
+# Dry-run restore to see what would happen
+$ rmz restore 1a2b3c4d --dry-run
 
-```bash
-cargo fmt
-cargo clippy
-```
+# Restore the operation
+$ rmz restore 1a2b3c4d
 
-## rmをrmzに置き換える (推奨)
 
-危険な`rm`コマンドを安全な`rmz delete`で置き換えることができます：
+⸻
 
-### 自動セットアップ
+Why use rmz?
+	•	You deleted the wrong file.
+	•	You thought you didn’t need it — but you did.
+	•	You’re human.
 
-```bash
-./scripts/setup-rm-alias.sh
-```
+rmz gives you what rm never could:
+a way back.
 
-### 手動セットアップ
+⸻
 
-```bash
-# シェル設定ファイルにエイリアスを追加
-echo "alias rm='rmz delete'" >> ~/.bashrc  # bashの場合
-echo "alias rm='rmz delete'" >> ~/.zshrc   # zshの場合
+License
 
-# 設定を再読み込み
-source ~/.bashrc  # または ~/.zshrc
-```
-
-### 使用方法
-
-エイリアス設定後は、通常の`rm`コマンドがrmzに置き換わります：
-
-```bash
-rm file.txt           # ファイルをトラッシュに移動
-rm -r directory/      # ディレクトリを再帰的にトラッシュに移動
-rm -f important.txt   # 強制削除でもトラッシュに移動（安全）
-
-# ファイルの復元
-rmz restore --interactive
-
-# 完全削除
-rmz purge --days 30
-```
-
-詳細は [docs/rm-alias-setup.md](docs/rm-alias-setup.md) を参照してください。
-
-## ライセンス
-
-MIT OR Apache-2.0
+MIT
