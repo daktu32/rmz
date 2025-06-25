@@ -1,106 +1,66 @@
-# Pull Request
+# Pull Request Template
 
-## 📋 概要
+## Overview
 
-<!-- このPRで追加・変更・修正した内容を簡潔に説明してください -->
-
-## 🎯 変更内容
-
-### 機能追加
-- [ ] 新しいCLIコマンドを追加
-- [ ] 既存機能の拡張
-- [ ] OpenAI API統合の改善
-
-### バグ修正
-- [ ] TypeScriptエラーの修正
-- [ ] CLI動作の不具合修正
-- [ ] テストの修正
-
-### ドキュメント更新
-- [ ] 仕様書の更新
-- [ ] READMEの更新
-- [ ] コメントの追加・修正
-
-### その他
-- [ ] 依存関係の更新
-- [ ] 設定ファイルの変更
-- [ ] リファクタリング
-
-## 🧪 開発フロー準拠チェック
-
-### 📚 仕様書・テスト
-- [ ] `docs/specs/F-XX-*.md` に機能仕様を作成済み
-- [ ] `features/F-XX-*.feature` にBDDテストを作成済み
-- [ ] 仕様書とテストが実装内容と一致している
-
-### 💻 実装品質
-- [ ] TypeScriptコンパイルエラーなし (`npm run build`)
-- [ ] E2Eテストが通る (`npm run test:e2e`)
-- [ ] CLI の `--help` が日本語で適切に表示される
-- [ ] エラーハンドリングが適切に実装されている
-
-### 🔧 コード標準
-- [ ] `.cursorrules` の開発ルールに準拠
-- [ ] `any` 型を使用していない
-- [ ] OpenAI プロンプトが `src/utils/prompts.ts` に集約されている
-- [ ] 非同期処理で `async/await` を使用
-
-### 🏗️ アーキテクチャ
-- [ ] ファイル配置が規約に従っている
-- [ ] `src/cli/index.ts` にコマンドが適切に登録されている
-- [ ] 破壊的変更を避けている
-
-## 🧠 AI エージェント向け情報
-
-### 実装パターン
-```typescript
-// 使用したデザインパターンや実装方針があれば記載
-```
-
-### 注意点
-<!-- AI エージェントが後で参照する際の注意事項があれば記載 -->
-
-## 🔍 テスト方法
-
-### 手動確認手順
-```bash
-npm run build
-npm start -- [new-command] --help
-npm start -- [new-command] [test-args]
-```
-
-### 自動テスト
-```bash
-npm run test:e2e
-```
-
-## 📝 関連情報
-
-### 関連Issue
-- Closes #XXX
-- Related to #XXX
-
-### 影響範囲
-<!-- この変更が影響する他の機能や設定があれば記載 -->
-
-### 破壊的変更
-- [ ] 破壊的変更あり（詳細を下記に記載）
-- [x] 破壊的変更なし
-
-<!-- 破壊的変更がある場合の詳細 -->
-
-## 📚 レビュー観点
-
-### 優先的にチェックしてほしい点
-<!-- レビュアーに特に注意深く見てもらいたい箇所 -->
-
-### 懸念点・議論したい点
-<!-- 実装で迷った点や、より良いアプローチがあるか相談したい点 -->
-
-## 🎯 次のステップ
-
-<!-- このPRがマージされた後の予定や、関連して実装予定の機能 -->
+<!-- Briefly describe the purpose and scope of this PR. What problem does it solve or what feature does it add? -->
 
 ---
 
-**チェックリスト確認**: 上記のチェック項目を確認してからレビューを依頼してください。
+## Changes
+
+- [ ] New CLI command
+- [ ] Enhancement to existing functionality
+- [ ] Bug fix
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Dependency update
+- [ ] Other (describe below)
+
+---
+
+## Checklist
+
+- [ ] All code is written in English
+- [ ] All tests pass (`cargo test`)
+- [ ] No clippy warnings (`cargo clippy`)
+- [ ] Code is formatted (`cargo fmt`)
+- [ ] Documentation is updated (`docs/`, `docs/dev/`)
+- [ ] Progress and roadmap updated (`docs/dev/progress.md`, `docs/dev/development-roadmap.md`)
+- [ ] Commit messages are clear and in English
+- [ ] Pull request includes a summary of changes and test results
+
+---
+
+## Development & Testing
+
+- [ ] Feature requirements are documented (if applicable)
+- [ ] Tests are written before implementation (TDD)
+- [ ] Integration tests updated or added (`tests/integration_tests.rs`)
+- [ ] Manual test steps (if needed):
+  ```bash
+  cargo build
+  cargo run -- [command] [args]
+  cargo test
+  ```
+
+---
+
+## Related Issues
+- Closes #
+- Related to #
+
+---
+
+## Breaking Changes
+- [ ] This PR introduces breaking changes (describe below)
+- [x] No breaking changes
+
+---
+
+## Reviewer Notes
+
+<!-- Anything reviewers should pay special attention to, or points for discussion. -->
+
+---
+
+Thank you for contributing to rmz!

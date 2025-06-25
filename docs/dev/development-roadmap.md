@@ -1,289 +1,86 @@
 # Development Roadmap
 
-## Strategic Vision
-
-**Project Vision**: Create a modern, safe, and intuitive replacement for the `rm` command that prevents accidental data loss while providing powerful file management capabilities.
-
-**Target Release**: v1.0 by 2025-07-15
-
-**Success Metrics**: 
-- Zero data loss incidents in production use
-- Sub-second response time for all operations
-- 90%+ user satisfaction with safety features
-- Cross-platform compatibility (Linux, macOS, Windows)
+This roadmap outlines the major phases, implementation plan, and progress for the rmz Rust CLI project.
 
 ---
 
-## Phase Overview
-
-### Phase 1: Foundation & Architecture ✅
-**Duration**: 1 day  
-**Status**: **Complete** (2025-06-23)  
-**Objective**: Establish solid architectural foundation with TDD approach
-
-#### Deliverables
-- [x] ✅ Test-driven development strategy implemented
-- [x] ✅ Domain models (FileMeta, TrashItem, Config, OperationLog)
-- [x] ✅ Layered architecture with clear separation
-- [x] ✅ Infrastructure interfaces defined
-- [x] ✅ Rust project structure with Cargo.toml
-
-#### Success Criteria
-- ✅ Clean architecture with testable components
-- ✅ Type-safe domain models
-- ✅ Comprehensive error handling strategy
-- ✅ CI/CD pipeline foundation
-
-### Phase 2: Core Infrastructure ✅
-**Duration**: 1 day  
-**Status**: **Complete** (2025-06-23)  
-**Objective**: Build robust storage and metadata management
-
-#### Deliverables
-- [x] ✅ MetaStore implementation with JSON serialization
-- [x] ✅ TrashStore with file operations
-- [x] ✅ ConfigManager with XDG directory compliance
-- [x] ✅ Protected path management
-- [x] ✅ Date-based trash organization
-
-#### Success Criteria
-- ✅ Atomic file operations
-- ✅ Metadata consistency guarantees
-- ✅ Safe configuration management
-- ✅ Cross-platform path handling
-
-### Phase 3: MVP Commands ✅
-**Duration**: 1 day  
-**Status**: **Complete** (2025-06-23)  
-**Objective**: Implement core user-facing functionality
-
-#### Deliverables
-- [x] ✅ **delete** command with safety features
-- [x] ✅ **restore** command with multiple modes
-- [x] ✅ **list** command with filtering and formatting
-- [x] ✅ **status** command with comprehensive analytics
-- [x] ✅ 49 comprehensive tests with 100% pass rate
-
-#### Success Criteria
-- ✅ All basic workflows functional
-- ✅ Comprehensive error handling
-- ✅ User-friendly output formatting
-- ✅ Dry-run capabilities for safety
-
-### Phase 4: CI/CD & Quality Assurance ✅
-**Duration**: 0.5 days  
-**Status**: **Complete** (2025-06-23)  
-**Objective**: Establish professional development workflow
-
-#### Deliverables
-- [x] ✅ GitHub Actions CI/CD pipeline
-- [x] ✅ Multi-platform testing (Ubuntu, macOS)
-- [x] ✅ Code quality checks (rustfmt, clippy)
-- [x] ✅ Security audit integration (cargo-audit)
-- [x] ✅ Release build automation
-
-#### Success Criteria
-- ✅ Zero clippy warnings policy
-- ✅ Automated testing on all platforms
-- ✅ Security vulnerability monitoring
-- ✅ Professional code quality standards
-
-### Phase 5: Management Commands 📋
-**Duration**: 2 days  
-**Status**: **Planned** (Next Phase)  
-**Objective**: Complete feature set for production use
-
-#### Deliverables
-- [ ] 📋 **purge** command for permanent deletion
-- [ ] 📋 **log** command for operation history
-- [ ] 📋 **protect** command for path management
-- [ ] 📋 **config** command for settings
-- [ ] 📋 **doctor** command for system diagnostics
-- [ ] 📋 **completions** command for shell integration
-
-#### Success Criteria
-- Disk space management capabilities
-- Full operation audit trail
-- Runtime configuration management
-- System health monitoring
-
-### Phase 6: Advanced Features & Polish 📋
-**Duration**: 3 days  
-**Status**: **Planned**  
-**Objective**: Enhanced user experience and advanced capabilities
-
-#### Deliverables
-- [ ] 📋 Interactive restore with fzf integration
-- [ ] 📋 File integrity verification with checksums
-- [ ] 📋 Operation logging integration
-- [ ] 📋 Advanced filtering and search
-- [ ] 📋 Bulk operations optimization
-- [ ] 📋 Custom trash retention policies
-
-#### Success Criteria
-- Advanced interactive capabilities
-- Performance optimization for large datasets
-- Extensible plugin architecture
-- Professional UX polish
-
-### Phase 7: Cross-Platform & Distribution 📋
-**Duration**: 2 days  
-**Status**: **Planned**  
-**Objective**: Broad platform support and easy installation
-
-#### Deliverables
-- [ ] 📋 Windows-specific features and testing
-- [ ] 📋 Package manager integration (homebrew, apt, etc.)
-- [ ] 📋 Binary distribution strategy
-- [ ] 📋 Installation scripts and documentation
-- [ ] 📋 Cross-platform compatibility testing
-
-#### Success Criteria
-- Full Windows compatibility
-- Easy installation on all platforms
-- Comprehensive distribution strategy
-- Wide platform adoption
+## Vision
+- Deliver a modern, safe, and intuitive replacement for the `rm` command
+- Prevent accidental data loss and provide robust file management
+- Cross-platform support (Linux, macOS, Windows)
 
 ---
 
-## Technical Architecture
+## Phases & Milestones
 
-### System Overview
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CLI Layer     │    │  Application    │    │   Domain        │
-│   (clap)        │───▶│   Commands      │───▶│   Models        │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                │                        │
-                                ▼                        ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Infrastructure │    │   TrashStore    │    │   MetaStore     │
-│   Interfaces    │───▶│   (Files)       │    │   (JSON)        │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+### Phase 1: Foundation & Architecture
+- TDD workflow established
+- Domain models and layered architecture implemented
+- CI/CD pipeline set up
 
-### Technology Stack
-- **Language**: Rust 2021 Edition
-- **CLI**: clap v4 with derive macros
-- **Serialization**: serde + serde_json
-- **Date/Time**: chrono with UTC timezone
-- **File Operations**: std::fs + fs_extra
-- **Testing**: cargo test + tempfile + assert_cmd
-- **CI/CD**: GitHub Actions
+### Phase 2: Core Infrastructure
+- Metadata and trash storage implemented (JSON)
+- Protected path management
+- Cross-platform path handling
 
-### Key Technical Decisions
-1. **Rust Language**: Memory safety, performance, cross-platform support
-2. **Layered Architecture**: Clean separation of concerns, testability
-3. **JSON Metadata**: Human-readable, debuggable, version-friendly
-4. **UUID File IDs**: Unique identification, collision-free
-5. **Date-based Organization**: Efficient storage, easy cleanup
+### Phase 3: Core Commands
+- `delete`, `restore`, `list`, `status` commands implemented
+- Comprehensive test suite
+- User-friendly output and error handling
 
----
+### Phase 4: Quality Assurance
+- CI/CD with multi-platform testing
+- Code quality checks (`clippy`, `fmt`)
+- Security audit integration
 
-## Risk Management
+### Phase 5: Management & Advanced Features
+- `purge`, `log`, `protect`, `config`, `doctor`, `completions` commands
+- Interactive restore (fzf integration)
+- Operation logging and advanced filtering
 
-### High Priority Risks
-| Risk | Impact | Probability | Mitigation Strategy |
-|------|--------|-------------|-------------------|
-| Data corruption during operations | High | Low | Atomic operations, metadata validation |
-| Performance degradation with large datasets | Medium | Medium | Indexing, lazy loading, optimization |
-| Cross-platform compatibility issues | High | Medium | Extensive testing, platform-specific code |
-| Metadata inconsistency | High | Low | Integrity checks, repair mechanisms |
-
-### Dependencies
-- **External Services**: None (fully self-contained)
-- **System Dependencies**: File system, directory permissions
-- **Technical Prerequisites**: Rust toolchain, basic Unix concepts
+### Phase 6: Distribution & Adoption
+- Windows support and testing
+- Package manager integration (Homebrew, Cargo, etc.)
+- Binary distribution and installation scripts
+- Documentation for users and developers
 
 ---
 
-## Resource Planning
+## Implementation Plan
 
-### Development Time Estimates
-- **Phase 1-4 (Completed)**: 3 days (actual)
-- **Phase 5 (Management)**: 2 days (estimated)
-- **Phase 6 (Advanced)**: 3 days (estimated)
-- **Phase 7 (Distribution)**: 2 days (estimated)
-- **Total Project**: 10 days (estimated)
-
-### Quality Assurance
-- Test-driven development throughout
-- Continuous integration on all commits
-- Code review for all changes
-- Performance benchmarking
+- All work is done on feature branches using `git worktree`
+- TDD: Write tests before implementation
+- Update documentation and progress after each phase
+- Use English for all code, comments, and documentation
+- Regular code review and CI checks
 
 ---
 
-## Milestones & Checkpoints
+## Progress & Next Steps
 
-### Key Milestones
-- **2025-06-23**: ✅ MVP Complete - Core functionality working
-- **2025-06-25**: 📋 Management Commands Complete
-- **2025-06-30**: 📋 Advanced Features Complete
-- **2025-07-05**: 📋 Cross-platform Testing Complete
-- **2025-07-15**: 📋 v1.0 Release Ready
+### Completed
+- Foundation, architecture, and core infrastructure
+- Core commands and test suite
+- CI/CD and quality assurance
 
-### Review Points
-- **Daily**: Code review and testing
-- **Phase Gates**: Feature completeness review
-- **Weekly**: Progress assessment and planning
-
----
-
-## Success Metrics
-
-### Technical Metrics
-- [x] ✅ Test coverage > 90% (Current: 100% pass rate)
-- [x] ✅ Build time < 2 minutes (Current: ~1 minute)
-- [x] ✅ Binary size < 10MB (Current: ~5MB)
-- [ ] 📋 Delete operation < 50ms per file
-- [ ] 📋 List operation < 100ms for 10k items
-
-### Functional Metrics
-- [x] ✅ Zero data loss in testing
-- [x] ✅ All core workflows functional
-- [ ] 📋 Cross-platform compatibility verified
-- [ ] 📋 Performance benchmarks met
-- [ ] 📋 User acceptance testing passed
-
-### Quality Metrics
-- [x] ✅ Zero clippy warnings (Current: 0)
-- [x] ✅ All tests passing (Current: 49/49)
-- [x] ✅ Security audit clean (Current: 0 vulnerabilities)
-- [ ] 📋 Documentation coverage > 95%
+### In Progress / Next
+- Implement `purge`, `log`, `protect`, `config`, `doctor`, `completions` commands
+- Add interactive restore (fzf integration)
+- Expand operation logging and advanced filtering
+- Windows support and package manager integration
+- Update documentation and user guides
 
 ---
 
-## Current Status Summary
-
-### Completed (60% of total project)
-🏆 **Solid Foundation**: Architecture, infrastructure, and core commands complete  
-🏆 **High Quality**: 49 tests passing, zero warnings, CI/CD operational  
-🏆 **Functional MVP**: All basic file operations working safely  
-🏆 **Professional Standards**: Clean code, comprehensive testing, documentation  
-
-### Next Phase Priority
-1. **purge** command - Critical for disk space management
-2. **log** command - Essential for operation audit trail
-3. Performance optimization for large datasets
-4. Windows compatibility testing
-
-### Risk Assessment
-- **Low Risk**: Solid foundation and proven architecture
-- **Medium Risk**: Performance with large datasets (mitigatable)
-- **Low Risk**: Cross-platform issues (extensive testing planned)
+## Metrics
+- **Test Coverage**: >90%
+- **Clippy Warnings**: 0
+- **Security Vulnerabilities**: 0
+- **Binary Size**: ~5MB (release build)
 
 ---
 
-**Document Owner**: Claude Code Assistant  
-**Last Updated**: 2025-06-23  
-**Review Cycle**: Weekly during active development
-
-## Revision History
-
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| 2025-06-23 | 1.0 | Initial roadmap for rmz project | Claude Code |
-| 2025-06-23 | 1.1 | Updated with Phase 1-4 completion | Claude Code |
+## Review & Updates
+- Roadmap is reviewed after each major phase
+- See `docs/dev/architecture.md` for system details
+- See `docs/dev/test-strategy.md` for testing details

@@ -1,67 +1,48 @@
-# Basic Development Prompt
+# Basic Development Guide
 
-A simplified version for smaller projects or teams getting started with Claude Code.
+This guide describes the basic development setup and workflow for the rmz Rust CLI project.
 
-## Agent Roles
+---
 
-1. **Developer** - Implementation and code review
-2. **QA** - Testing and quality assurance
-3. **Project Manager** - Progress tracking and coordination
+## Prerequisites
+- Rust toolchain (latest stable)
+- Git
+- Editor/IDE (VSCode, CLion, etc.)
+- Unix-like environment (Linux, macOS, or WSL)
 
-## Development Flow
+---
 
-### Phase 1: Planning
--  Define user requirements
--  Create basic technical plan
--  Set up development environment
+## Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/rmz.git
+   cd rmz
+   ```
+2. Install Rust (if not already):
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   rustup update
+   ```
+3. Run tests:
+   ```bash
+   cargo test
+   ```
+4. Build the CLI:
+   ```bash
+   cargo build --release
+   ```
 
-**Approval**: `/approve phase1`
+---
 
-### Phase 2: Implementation
--  Implement core features
--  Write tests (≥80% coverage)
--  Code review by peer
+## Development Workflow
+- Use feature branches and `git worktree` for all changes
+- Follow TDD: write tests before implementation
+- Run `cargo fmt`, `cargo clippy`, and `cargo test` before committing
+- Update documentation as needed
+- All code, comments, and documentation must be in English
 
-**Approval**: `/approve phase2`
+---
 
-### Phase 3: Testing & Deployment
--  All tests passing
--  Manual QA testing
--  Deploy to staging
--  Demo to stakeholders
-
-**Approval**: `/approve phase3`
-
-## Quality Gates
-
-- **Code Coverage**: ≥80%
-- **Code Review**: All code must be reviewed
-- **Tests**: All tests must pass
-- **Documentation**: README and API docs updated
-
-## Error Handling
-
-### Commands
-- `/error_status` - Show current issues
-- `/retry_with_fix <issue>` - Retry after fixing
-- `/help` - Show available commands
-
-### Auto-fixes
-- Code formatting (Prettier, ESLint)
-- Basic documentation generation
-- Simple security checks
-
-## File Structure
-```
-/src                    # Source code
-/tests                  # Test files
-/docs                   # Documentation
-.github/workflows/      # CI/CD
-README.md              # Project overview
-```
-
-Use this prompt for:
-- Small projects (1-3 developers)
-- MVP development
-- Learning Claude Code basics
-- Rapid prototyping
+## References
+- See `CONTRIBUTING.md` for detailed contribution guidelines
+- See `docs/dev/architecture.md` for system structure
