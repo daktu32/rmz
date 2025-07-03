@@ -22,7 +22,7 @@ impl MetaStore {
     }
 
     fn metadata_file_path(&self, id: &Uuid) -> PathBuf {
-        self.metadata_dir.join(format!("{}.json", id))
+        self.metadata_dir.join(format!("{id}.json"))
     }
 }
 
@@ -66,7 +66,7 @@ impl MetaStoreInterface for MetaStore {
                 match serde_json::from_str::<FileMeta>(&content) {
                     Ok(meta) => metadata_list.push(meta),
                     Err(e) => {
-                        eprintln!("Warning: Failed to parse metadata file {:?}: {}", path, e);
+                        eprintln!("Warning: Failed to parse metadata file {path:?}: {e}");
                     }
                 }
             }
@@ -104,7 +104,7 @@ mod tests {
         // Create test metadata
         let test_file = NamedTempFile::new().unwrap();
         fs::write(test_file.path(), "content").unwrap();
-        let meta = FileMeta::from_path(&test_file.path().to_path_buf()).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         // Save metadata
         meta_store.save_metadata(&meta).unwrap();
@@ -130,8 +130,8 @@ mod tests {
         fs::write(test_file1.path(), "content1").unwrap();
         fs::write(test_file2.path(), "content2").unwrap();
 
-        let meta1 = FileMeta::from_path(&test_file1.path().to_path_buf()).unwrap();
-        let meta2 = FileMeta::from_path(&test_file2.path().to_path_buf()).unwrap();
+        let meta1 = FileMeta::from_path(test_file1.path()).unwrap();
+        let meta2 = FileMeta::from_path(test_file2.path()).unwrap();
 
         meta_store.save_metadata(&meta1).unwrap();
         meta_store.save_metadata(&meta2).unwrap();
@@ -151,7 +151,7 @@ mod tests {
 
         let test_file = NamedTempFile::new().unwrap();
         fs::write(test_file.path(), "content").unwrap();
-        let meta = FileMeta::from_path(&test_file.path().to_path_buf()).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         // Save and then delete
         meta_store.save_metadata(&meta).unwrap();

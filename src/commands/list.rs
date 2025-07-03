@@ -159,7 +159,7 @@ fn output_json(items: &[TrashItem], verbose: bool) -> Result<()> {
         .collect();
 
     let json = serde_json::to_string_pretty(&json_items)?;
-    println!("{}", json);
+    println!("{json}");
     Ok(())
 }
 
@@ -244,7 +244,7 @@ fn output_single_item(item: &TrashItem, verbose: bool, prefix: &str) {
     let deleted_time = item.meta.deleted_at.format("%Y-%m-%d %H:%M:%S");
 
     if verbose {
-        println!("{}📄 {} ({})", prefix, filename, size);
+        println!("{prefix}📄 {filename} ({size})");
         println!("{}   ID: {}", prefix, item.meta.id);
         println!(
             "{}   Original: {}",
@@ -364,8 +364,8 @@ mod tests {
         fs::write(test_file1.path(), "content1").unwrap();
         fs::write(test_file2.path(), "content2").unwrap();
 
-        let mut meta1 = FileMeta::from_path(&test_file1.path()).unwrap();
-        let mut meta2 = FileMeta::from_path(&test_file2.path()).unwrap();
+        let mut meta1 = FileMeta::from_path(test_file1.path()).unwrap();
+        let mut meta2 = FileMeta::from_path(test_file2.path()).unwrap();
 
         // Add tags for testing
         meta1.add_tag("test".to_string());
@@ -394,7 +394,7 @@ mod tests {
         // Create test file
         let test_file = NamedTempFile::new().unwrap();
         fs::write(test_file.path(), "test content").unwrap();
-        let meta = FileMeta::from_path(&test_file.path()).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         trash_store.save(&meta, test_file.path()).unwrap();
         let items = trash_store.list().unwrap();

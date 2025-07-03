@@ -172,7 +172,7 @@ mod tests {
         let meta1 = FileMeta::from_path(&path).unwrap();
         assert_eq!(meta1.human_readable_size(), "1 B");
 
-        fs::write(&path, &vec![0u8; 1536]).unwrap(); // 1.5 KB
+        fs::write(&path, vec![0u8; 1536]).unwrap(); // 1.5 KB
         let meta2 = FileMeta::from_path(&path).unwrap();
         assert_eq!(meta2.human_readable_size(), "1.5 KB");
     }

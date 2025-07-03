@@ -102,10 +102,8 @@ impl TrashStoreInterface for TrashStore {
                 items.push(TrashItem::new(meta, trash_path));
             } else {
                 // File is missing, optionally clean up metadata
-                eprintln!(
-                    "Warning: Metadata exists but file missing for ID: {}",
-                    meta.id
-                );
+                let id = meta.id;
+                eprintln!("Warning: Metadata exists but file missing for ID: {id}");
             }
         }
 
@@ -138,7 +136,7 @@ impl TrashStoreInterface for TrashStore {
                 Ok(Some(TrashItem::new(meta, trash_path)))
             } else {
                 // Metadata exists but file is missing
-                eprintln!("Warning: Metadata exists but file missing for ID: {}", id);
+                eprintln!("Warning: Metadata exists but file missing for ID: {id}");
                 Ok(None)
             }
         } else {
@@ -161,17 +159,16 @@ mod tests {
 
         // Create a test file
         let test_file = NamedTempFile::new().unwrap();
-        let file_path = test_file.path().to_path_buf();
-        fs::write(&file_path, "test content").unwrap();
+        fs::write(test_file.path(), "test content").unwrap();
 
         // Create metadata
-        let meta = FileMeta::from_path(&file_path).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         // Save to trash
-        let trash_item = trash_store.save(&meta, &file_path).unwrap();
+        let trash_item = trash_store.save(&meta, test_file.path()).unwrap();
 
         // Verify file was moved
-        assert!(!file_path.exists());
+        assert!(!test_file.path().exists());
         assert!(trash_item.trash_path.exists());
         assert_eq!(
             fs::read_to_string(&trash_item.trash_path).unwrap(),
@@ -185,7 +182,7 @@ mod tests {
         let trash_store = TrashStore::new(temp_dir.path().to_path_buf());
 
         let test_file = NamedTempFile::new().unwrap();
-        let meta = FileMeta::from_path(&test_file.path().to_path_buf()).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         let filename = trash_store.generate_trash_filename(&meta);
         assert!(filename.ends_with(".rmz"));
@@ -212,8 +209,8 @@ mod tests {
         fs::write(test_file1.path(), "content1").unwrap();
         fs::write(test_file2.path(), "content2").unwrap();
 
-        let meta1 = FileMeta::from_path(&test_file1.path().to_path_buf()).unwrap();
-        let meta2 = FileMeta::from_path(&test_file2.path().to_path_buf()).unwrap();
+        let meta1 = FileMeta::from_path(test_file1.path()).unwrap();
+        let meta2 = FileMeta::from_path(test_file2.path()).unwrap();
 
         trash_store.save(&meta1, test_file1.path()).unwrap();
         trash_store.save(&meta2, test_file2.path()).unwrap();
@@ -231,7 +228,7 @@ mod tests {
         // Create and save test file
         let test_file = NamedTempFile::new().unwrap();
         fs::write(test_file.path(), "content").unwrap();
-        let meta = FileMeta::from_path(&test_file.path().to_path_buf()).unwrap();
+        let meta = FileMeta::from_path(test_file.path()).unwrap();
 
         trash_store.save(&meta, test_file.path()).unwrap();
 

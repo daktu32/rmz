@@ -105,7 +105,7 @@ impl OperationLog {
     pub fn result_display(&self) -> String {
         match &self.result {
             OperationResult::Success => "✅ Success".to_string(),
-            OperationResult::Failed(error) => format!("❌ Failed: {}", error),
+            OperationResult::Failed(error) => format!("❌ Failed: {error}"),
             OperationResult::Cancelled => "⚠️ Cancelled".to_string(),
         }
     }
@@ -130,7 +130,7 @@ impl OperationLog {
             "unknown".to_string()
         };
 
-        format!("{} {}", operation_name, paths_str)
+        format!("{operation_name} {paths_str}")
     }
 }
 
@@ -183,7 +183,7 @@ impl OperationLogger {
                 match serde_json::from_str::<OperationLog>(line) {
                     Ok(log) => logs.push(log),
                     Err(e) => {
-                        eprintln!("Warning: Failed to parse log line: {}", e);
+                        eprintln!("Warning: Failed to parse log line: {e}");
                         // Continue parsing other lines
                     }
                 }

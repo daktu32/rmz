@@ -158,7 +158,7 @@ mod tests {
 
         match &result {
             Ok(_) => {}
-            Err(e) => panic!("Delete failed: {}", e),
+            Err(e) => panic!("Delete failed: {e}"),
         }
         assert!(!file_path.exists()); // Original file should be gone
     }
@@ -201,8 +201,10 @@ mod tests {
     #[test]
     fn test_delete_protected_file() {
         let temp_dir = TempDir::new().unwrap();
-        let mut config = Config::default();
-        config.trash_path = temp_dir.path().join("trash");
+        let mut config = Config {
+            trash_path: temp_dir.path().join("trash"),
+            ..Default::default()
+        };
 
         // Add a protected path
         let protected_dir = temp_dir.path().join("protected");

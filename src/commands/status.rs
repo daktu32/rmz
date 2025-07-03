@@ -37,8 +37,8 @@ pub fn execute(detailed: bool, verbose: bool) -> Result<()> {
     println!("🗑️  Trash Status");
     println!("{}", "─".repeat(50));
     println!("📁 Location: {}", config.trash_path.display());
-    println!("📊 Files: {}", total_files);
-    println!("💾 Total Size: {}", total_size_human);
+    println!("📊 Files: {total_files}");
+    println!("💾 Total Size: {total_size_human}");
 
     if let (Some(oldest), Some(newest)) = (oldest, newest) {
         println!("🕐 Oldest: {}", oldest.format("%Y-%m-%d %H:%M:%S"));
@@ -114,19 +114,19 @@ fn show_time_breakdown(items: &[TrashItem]) -> Result<()> {
 
     println!("\n⏰ By Time Period:");
     if today > 0 {
-        println!("   Today:      {}", today);
+        println!("   Today:      {today}");
     }
     if yesterday > 0 {
-        println!("   Yesterday:  {}", yesterday);
+        println!("   Yesterday:  {yesterday}");
     }
     if this_week > 0 {
-        println!("   This week:  {}", this_week);
+        println!("   This week:  {this_week}");
     }
     if this_month > 0 {
-        println!("   This month: {}", this_month);
+        println!("   This month: {this_month}");
     }
     if older > 0 {
-        println!("   Older:      {}", older);
+        println!("   Older:      {older}");
     }
 
     Ok(())
@@ -160,7 +160,7 @@ fn show_file_type_breakdown(items: &[TrashItem]) -> Result<()> {
 
         if sorted_types.len() > 10 {
             let remaining = sorted_types.len() - 10;
-            println!("   ... and {} more types", remaining);
+            println!("   ... and {remaining} more types");
         }
     }
 
@@ -184,16 +184,16 @@ fn show_size_breakdown(items: &[TrashItem]) -> Result<()> {
 
     println!("\n📏 By File Size:");
     if small > 0 {
-        println!("   Small (< 1KB):     {}", small);
+        println!("   Small (< 1KB):     {small}");
     }
     if medium > 0 {
-        println!("   Medium (1KB-1MB):  {}", medium);
+        println!("   Medium (1KB-1MB):  {medium}");
     }
     if large > 0 {
-        println!("   Large (1MB-100MB): {}", large);
+        println!("   Large (1MB-100MB): {large}");
     }
     if huge > 0 {
-        println!("   Huge (> 100MB):    {}", huge);
+        println!("   Huge (> 100MB):    {huge}");
     }
 
     Ok(())
@@ -217,19 +217,19 @@ fn show_tag_breakdown(items: &[TrashItem]) -> Result<()> {
         println!("\n🏷️  By Tags:");
 
         if untagged > 0 {
-            println!("   (no tags): {}", untagged);
+            println!("   (no tags): {untagged}");
         }
 
         let mut sorted_tags: Vec<_> = tag_counts.iter().collect();
         sorted_tags.sort_by(|a, b| b.1.cmp(a.1));
 
         for (tag, count) in sorted_tags.iter().take(10) {
-            println!("   {}: {}", tag, count);
+            println!("   {tag}: {count}");
         }
 
         if sorted_tags.len() > 10 {
             let remaining = sorted_tags.len() - 10;
-            println!("   ... and {} more tags", remaining);
+            println!("   ... and {remaining} more tags");
         }
     }
 
@@ -257,7 +257,7 @@ fn show_storage_breakdown(items: &[TrashItem], config: &crate::domain::Config) -
 
         if sorted_dates.len() > 7 {
             let remaining = sorted_dates.len() - 7;
-            println!("   ... and {} more dates", remaining);
+            println!("   ... and {remaining} more dates");
         }
     }
 
@@ -295,7 +295,7 @@ fn show_recent_activity(items: &[TrashItem]) -> Result<()> {
             let size = format_size(item.meta.size);
             let time_ago = format_time_ago(now.signed_duration_since(item.meta.deleted_at));
 
-            println!("   {} ({}) - {}", filename, size, time_ago);
+            println!("   {filename} ({size}) - {time_ago}");
         }
 
         if recent_items.len() > 5 {
@@ -457,10 +457,10 @@ mod tests {
         let test_file1 = NamedTempFile::new().unwrap();
         let test_file2 = NamedTempFile::new().unwrap();
         fs::write(test_file1.path(), "small content").unwrap();
-        fs::write(test_file2.path(), &vec![0u8; 2048]).unwrap(); // 2KB file
+        fs::write(test_file2.path(), vec![0u8; 2048]).unwrap(); // 2KB file
 
-        let mut meta1 = FileMeta::from_path(&test_file1.path()).unwrap();
-        let mut meta2 = FileMeta::from_path(&test_file2.path()).unwrap();
+        let mut meta1 = FileMeta::from_path(test_file1.path()).unwrap();
+        let mut meta2 = FileMeta::from_path(test_file2.path()).unwrap();
 
         // Add different tags
         meta1.add_tag("test".to_string());

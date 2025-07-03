@@ -235,8 +235,10 @@ mod tests {
     #[test]
     fn test_ensure_directories() {
         let temp_dir = TempDir::new().unwrap();
-        let mut config = Config::default();
-        config.trash_path = temp_dir.path().join("test_trash");
+        let config = Config {
+            trash_path: temp_dir.path().join("test_trash"),
+            ..Default::default()
+        };
 
         config.ensure_directories().unwrap();
 
