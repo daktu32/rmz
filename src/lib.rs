@@ -3,3 +3,4 @@ pub mod commands;
 pub mod core;
 pub mod domain;
 pub mod infra;
+pub mod utils;
