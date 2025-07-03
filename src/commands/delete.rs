@@ -2,6 +2,7 @@ use crate::domain::{Config, FileMeta};
 use crate::infra::meta_store::MetaStoreInterface;
 use crate::infra::trash_store::TrashStoreInterface;
 use crate::infra::{ConfigManager, MetaStore, TrashStore};
+use crate::ops::safe_file_ops::FileSnapshot;
 use anyhow::Result;
 use std::path::PathBuf;
 
@@ -36,7 +37,14 @@ pub fn execute(
             interactive,
             verbose,
         };
-        match delete_single_file(&path, &config, &trash_store, &meta_store, &tag, &options) {
+        match delete_single_file(
+            path.as_path(),
+            &config,
+            &trash_store,
+            &meta_store,
+            &tag,
+            &options,
+        ) {
             Ok(meta) => {
                 deleted_files.push(meta);
                 if verbose {
@@ -66,30 +74,28 @@ struct DeleteOptions {
 }
 
 fn delete_single_file(
-    path: &PathBuf,
+    path: &std::path::Path,
     config: &Config,
     trash_store: &TrashStore,
     meta_store: &MetaStore,
     tag: &Option<String>,
     options: &DeleteOptions,
 ) -> Result<FileMeta> {
-    // Check if file exists
-    if !path.exists() {
-        anyhow::bail!("File does not exist: {}", path.display());
-    }
+    // Capture snapshot of the file for TOCTOU-safe operations
+    let snapshot = FileSnapshot::capture(path)?;
 
-    // Check if path is protected
-    if config.is_protected(path) {
+    // Check if path is protected using the snapshot path
+    if config.is_protected(&snapshot.path) {
         anyhow::bail!("Path is protected from deletion: {}", path.display());
     }
 
     // Interactive confirmation if needed
-    if options.interactive && !options.force && !confirm_deletion(path)? {
+    if options.interactive && !options.force && !confirm_deletion(&snapshot.path)? {
         anyhow::bail!("Deletion cancelled by user");
     }
 
-    // Create metadata
-    let mut meta = FileMeta::from_path(path.as_path())?;
+    // Create metadata from snapshot
+    let mut meta = FileMeta::from_snapshot(&snapshot)?;
 
     // Add tag if provided
     if let Some(tag_value) = tag {
@@ -97,11 +103,11 @@ fn delete_single_file(
     }
 
     if options.verbose {
-        println!("Moving {} to trash...", path.display());
+        println!("Moving {} to trash...", snapshot.path.display());
     }
 
     // Move to trash and save metadata
-    let _trash_item = trash_store.save(&meta, path)?;
+    let _trash_item = trash_store.save(&meta, &snapshot.path)?;
     meta_store.save_metadata(&meta)?;
 
     Ok(meta)
@@ -148,7 +154,7 @@ mod tests {
             verbose: false,
         };
         let result = delete_single_file(
-            &file_path,
+            file_path.as_path(),
             &config,
             &trash_store,
             &meta_store,
@@ -183,7 +189,7 @@ mod tests {
             verbose: false,
         };
         let result = delete_single_file(
-            &nonexistent_path,
+            nonexistent_path.as_path(),
             &config,
             &trash_store,
             &meta_store,
@@ -195,7 +201,7 @@ mod tests {
         assert!(result
             .unwrap_err()
             .to_string()
-            .contains("File does not exist"));
+            .contains("Cannot read metadata"));
     }
 
     #[test]
@@ -222,7 +228,7 @@ mod tests {
             verbose: false,
         };
         let result = delete_single_file(
-            &protected_file,
+            protected_file.as_path(),
             &config,
             &trash_store,
             &meta_store,

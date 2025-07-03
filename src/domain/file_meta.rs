@@ -64,6 +64,26 @@ impl FileMeta {
         })
     }
 
+    /// Create FileMeta from a [`FileSnapshot`]
+    pub fn from_snapshot(
+        snapshot: &crate::ops::safe_file_ops::FileSnapshot,
+    ) -> anyhow::Result<Self> {
+        let deleted_by = std::env::var("USER")
+            .or_else(|_| std::env::var("USERNAME"))
+            .unwrap_or_else(|_| "unknown".to_string());
+
+        Ok(Self {
+            id: Uuid::new_v4(),
+            original_path: snapshot.path.clone(),
+            deleted_at: Utc::now(),
+            size: snapshot.size,
+            permissions: snapshot.permissions,
+            tags: Vec::new(),
+            checksum: None,
+            deleted_by,
+        })
+    }
+
     /// Add a tag to this file
     pub fn add_tag(&mut self, tag: String) {
         if !self.tags.contains(&tag) {
